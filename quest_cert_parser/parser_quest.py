@@ -13,7 +13,6 @@ from settings import URL
 
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-
 def load_data():   
     """
     Функция для загрузки в словарь: GIN / имя и в список: необходимые сертификации
@@ -91,9 +90,9 @@ def connect_quest(certifications, people_dict):
                 col0 = ''
             for i in certifications:
                 if i == col0:
-                    col1 = rows[1].text.stri 
+                    col1 = rows[1].text.strip()
                     data.append([col0, col1])          
-                    passed_certifications.append(i)   
+                    passed_certifications.append(i)
         
         for element in certifications:
             if element not in passed_certifications:
@@ -136,4 +135,7 @@ def format_file(big_data, certifications, people_dict):
 
     wb.save(f'BOM_{date}.xlsx')
 
-load_data()
+
+
+if __name__ == '__main__':
+    load_data()

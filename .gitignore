@@ -1,4 +1,5 @@
-quest_cert_parser/bom_user_full.txt
+quest_cert_parser/slb_user.txt
+quest_cert_parser/rs_user.txt
 quest_cert_parser/certifications.txt
 quest_cert_parser/settings.py
 quest_cert_parser/__pycache__
