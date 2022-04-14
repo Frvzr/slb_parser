@@ -4,4 +4,3 @@ quest_cert_parser/certifications.txt
 quest_cert_parser/settings.py
 quest_cert_parser/__pycache__
 quest_cert_parser/*.xlsx
-ext_calculator/other
