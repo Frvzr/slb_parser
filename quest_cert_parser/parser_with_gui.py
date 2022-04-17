@@ -20,7 +20,7 @@ big_data = []
 def save_certification(func):
     def wrapper():
         result = func()
-        with open ('certifications.txt', 'w+') as f:
+        with open ('data/certifications.txt', 'w+') as f:
             f.writelines("\n".join(cert_listbox.get(0, 'end')))
         return result
     return wrapper
@@ -35,13 +35,24 @@ def select_listbox(func):
         return result
     return wrapper
 
+def select_radiobutton(func):
+    def wrapper():
+        value_rbutton = select_listbox_button.get()
+        if  value_rbutton == 1:
+            lstbx = rs_listbox
+        else:
+            lstbx = slb_listbox
+        result = func(lstbx)
+        return result
+    return wrapper
+
 def save_users(func):
     def wrapper():
         result = func()
         if result == slb_listbox:
-            file = 'slb_user.txt'
+            file = 'data/slb_user.txt'
         else:
-            file = 'rs_user.txt'
+            file = 'data/rs_user.txt'
         with open (file, 'w+') as f:
             f.writelines("\n".join(result.get(0, 'end')))
         return result
@@ -73,14 +84,27 @@ def del_certification():
     select_certification = cert_listbox.curselection()
     cert_listbox.delete(select_certification)
 
+@select_radiobutton    
+def file_name(lstbx):
+    if lstbx == rs_listbox:
+        file_name = 'RS/RS_BOM_USERS'
+    else:
+        file_name = 'SLB/SLB_BOM_USERS'
+    return file_name
+
 def show_result(message):
     text.configure(state='normal')
     text.insert('end', message)
     text.configure(state='disabled')
 
 def start_action():
+    global big_data
+    big_data = []
     start_button.config(state=tk.DISABLED)
     thread = threading.Thread(target=load_data)
+    text.configure(state='normal')
+    text.delete('1.0', 'end')
+    text.configure(state='disabled')
     thread.start()
     check_thread(thread)
                  
@@ -89,21 +113,13 @@ def check_thread(thread):
         window.after(100, lambda: check_thread(thread))
     else:
         start_button.config(state=tk.NORMAL)
-        
-def save_excel():
-    pass
 
-def load_data():   
+@select_radiobutton
+def load_data(lstbx):   
     """
     Функция для загрузки в словарь: GIN / имя и в список: необходимые сертификации
     Returns: dict, list
     """
-    value_rbutton = select_listbox_button.get()
-    if  value_rbutton == 1:
-        lstbx = rs_listbox
-    else:
-        lstbx = slb_listbox
-        
     people_dict = {}
     
     for elem in range(lstbx.size()):
@@ -130,9 +146,9 @@ def connect_quest(people_dict):
 
         response = requests.get(url, verify=False)
         soup = BeautifulSoup(response.text, 'html.parser')
-        verify_data(soup, name, gin, people_dict)
+        verify_data(soup, name, gin)
         
-def verify_data(soup, name, gin, people_dict):
+def verify_data(soup, name, gin):
     
     try:
         verify_users = soup.find_all('table', class_='altyellow')
@@ -165,10 +181,9 @@ def verify_data(soup, name, gin, people_dict):
         message = f'{name} - ошибка данных'
         show_result(message)
         
-    collect_data(tables, name, people_dict)
-        
-        
-def collect_data(tables, name, people_dict): 
+    collect_data(tables, name)
+   
+def collect_data(tables, name): 
     global big_data
     data = []
     gin_data = []
@@ -196,18 +211,28 @@ def collect_data(tables, name, people_dict):
             
     big_data.append([name, *gin_data])
         
-    format_file(big_data, certifications)
+    create_file(certifications)
 
-def format_file(big_data, certifications):
+def get_date():
     date_time = datetime.now()
     date = date_time.strftime('%Y-%m-%d')
+    return date
+
+def create_file(certifications):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.append(['Name/Certifications', *certifications])
+    format_file(ws, wb)
     
+@select_radiobutton    
+def get_qty_user(lstbx):
+    qty_user = lstbx.size()
+    return qty_user    
+    
+def format_file(ws, wb):
     for row in big_data:
         ws.append(row)
-    quantity_users = slb_listbox.size()
+    quantity_users = get_qty_user()
     
     tab = Table(displayName="Table1", ref="A1:R{}".format(quantity_users + 1))
 
@@ -223,14 +248,20 @@ def format_file(big_data, certifications):
                   cell.fill = PatternFill(start_color='ff0000', end_color='ff0000', fill_type='solid')
                 if cell.value in certifications:
                     cell.alignment = Alignment(vertical='center', horizontal='center', text_rotation=90)
+    save_excel(wb)
     
-    try:                  
-        wb.save(f'BOM_{date}.xlsx')
+def save_excel(wb):
+    segment_name = file_name()
+    date = get_date()
+    try:
+        f_name = f'{segment_name}_{date}.xlsx'       
+        wb.save(f_name)
         message = f', данные записаны в файл \n'
     except:
         message = f', ошибка записи в файл \n'
-    
-    show_result(message)
+    finally:
+        wb.close
+        show_result(message)
 
 window = tk.Tk()
 window.title('BOM Quest Certifications')
@@ -289,7 +320,7 @@ slb_rbtn.place(x=600, y=480)
 rs_rbtn = tk.Radiobutton(text='RS', variable=select_listbox_button, value=1)
 rs_rbtn.place(x=600, y=500)
 
-file_dict = {'slb_user.txt': slb_listbox, 'rs_user.txt': rs_listbox, 'certifications.txt': cert_listbox}
+file_dict = {'data/slb_user.txt': slb_listbox, 'data/rs_user.txt': rs_listbox, 'data/certifications.txt': cert_listbox}
 for key, values in file_dict.items():
     with open(key) as f:
         lines = f.read().splitlines()
