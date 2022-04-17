@@ -4,3 +4,6 @@ quest_cert_parser/certifications.txt
 quest_cert_parser/settings.py
 quest_cert_parser/__pycache__
 quest_cert_parser/*.xlsx
+quest_cert_parser/data/
+quest_cert_parser/RS/
+quest_cert_parser/SLB/
