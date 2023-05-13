@@ -87,9 +87,9 @@ def del_certification():
 @select_radiobutton    
 def file_name(lstbx):
     if lstbx == rs_listbox:
-        file_name = 'RS/RS_BOM_USERS'
+        file_name = 'data/rs_user.txt'
     else:
-        file_name = 'SLB/SLB_BOM_USERS'
+        file_name = 'data/slb_user.txt'
     return file_name
 
 def show_result(message):
